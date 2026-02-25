@@ -30,22 +30,19 @@ reason over client conversations.
 
 ## Supabase Schema
 
-Run these migrations in the Supabase SQL editor if the tables do not yet exist.
+The service reads phone numbers from your existing `profiles` table
+(`profiles.phone_number`) and writes messages into a `communications` table.
+
+Run this migration in the Supabase SQL editor to create the `communications`
+table (the `profiles` table already exists in your project):
 
 ```sql
--- Users table (you may already have this)
-CREATE TABLE IF NOT EXISTS users (
-  id uuid PRIMARY KEY,
-  email text,
-  phone_number text  -- E.164 format, e.g. +16125551234
-);
-
--- Communications table
+-- Communications table — stores ingested iMessages for AI reference
 CREATE TABLE IF NOT EXISTS communications (
   id bigserial PRIMARY KEY,
   source text NOT NULL,           -- 'imessage'
   external_id text NOT NULL,      -- message ROWID from chat.db
-  client_id uuid REFERENCES users(id),
+  client_id uuid REFERENCES profiles(id),
   thread_key text,                -- chat ROWID
   direction text NOT NULL,        -- 'incoming' | 'outgoing'
   sender_handle text NOT NULL,    -- raw phone string from chat.db
@@ -79,20 +76,28 @@ app runs this script) before it can read `~/Library/Messages/chat.db`.
 
 ### 3. Set environment variables
 
+Copy the example env file and fill in your credentials:
+
+```bash
+cp .env.example .env
+# then edit .env with your real values
+```
+
+Or export them directly:
+
 ```bash
 export SUPABASE_URL="https://your-project.supabase.co"
 export SUPABASE_SERVICE_KEY="your-service-role-key"
 ```
 
-Add these to `~/.zshrc` or `~/.bash_profile` to persist them.
-
 > **Security note:** Use the *service role* key only on this trusted machine.
-> Never commit it to source control.
+> Never commit `.env` to source control.
 
-### 4. Seed `users.phone_number`
+### 4. Ensure `profiles.phone_number` is populated
 
-Populate your `users` table with E.164 phone numbers for each client before
-running the service.  Only those numbers will ever be ingested.
+The service reads phone numbers from the `profiles` table.  Make sure each
+client profile has a `phone_number` in E.164 format (e.g. `+16125551234`)
+before running.  Only numbers found in `profiles` will ever be ingested.
 
 ---
 
@@ -220,7 +225,7 @@ imessage_ingest/
 | Symptom | Fix |
 |---|---|
 | `FileNotFoundError: chat.db not found` | Grant Full Disk Access to your terminal (see Setup §2) |
-| `Missing required environment variable(s)` | Export `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` |
-| `No user found in Supabase` | Check the UUID passed to `--user-id` |
+| `Missing required environment variable(s)` | Set `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` in `.env` or shell |
+| `No profile found in Supabase` | Check the UUID passed to `--user-id` |
 | HTTP 401 from Supabase | Verify your service role key |
-| No messages matched | Confirm `users.phone_number` is populated and in E.164 format |
+| No messages matched | Confirm `profiles.phone_number` is populated and in E.164 format |

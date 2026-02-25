@@ -46,21 +46,21 @@ def _headers(key: str) -> dict[str, str]:
 
 def fetch_allowed_users() -> dict[str, str]:
     """
-    Query Supabase for all users that have a non-null phone_number.
+    Query Supabase for all profiles that have a non-null phone_number.
 
     Returns:
-        { phone_key (10 digits): user_id (uuid string) }
+        { phone_key (10 digits): profile_id (uuid string) }
     """
     from imessage_ingest.utils import normalize_phone_key
 
     url, key = _get_env()
-    endpoint = f"{url}/rest/v1/users"
+    endpoint = f"{url}/rest/v1/profiles"
     params = {"select": "id,phone_number", "phone_number": "not.is.null"}
 
     resp = requests.get(endpoint, headers=_headers(key), params=params, timeout=30)
     if not resp.ok:
         raise RuntimeError(
-            f"Failed to fetch users from Supabase: {resp.status_code} {resp.text}"
+            f"Failed to fetch profiles from Supabase: {resp.status_code} {resp.text}"
         )
 
     rows = resp.json()
@@ -71,36 +71,36 @@ def fetch_allowed_users() -> dict[str, str]:
             allowed[key_val] = row["id"]
         else:
             logger.warning(
-                "User %s has an un-normalizable phone_number '%s'; skipping.",
+                "Profile %s has an un-normalizable phone_number '%s'; skipping.",
                 row.get("id"),
                 row.get("phone_number"),
             )
-    logger.info("Fetched %d allowed users from Supabase.", len(allowed))
+    logger.info("Fetched %d allowed profiles from Supabase.", len(allowed))
     return allowed
 
 
 def fetch_user_by_id(user_id: str) -> dict:
     """
-    Fetch a single user row by UUID.  Fails if not found or phone_number is null.
+    Fetch a single profile row by UUID.  Fails if not found or phone_number is null.
     """
     url, key = _get_env()
-    endpoint = f"{url}/rest/v1/users"
+    endpoint = f"{url}/rest/v1/profiles"
     params = {"select": "id,phone_number", "id": f"eq.{user_id}"}
 
     resp = requests.get(endpoint, headers=_headers(key), params=params, timeout=30)
     if not resp.ok:
         raise RuntimeError(
-            f"Failed to fetch user {user_id}: {resp.status_code} {resp.text}"
+            f"Failed to fetch profile {user_id}: {resp.status_code} {resp.text}"
         )
 
     rows = resp.json()
     if not rows:
-        raise ValueError(f"No user found in Supabase with id={user_id}")
+        raise ValueError(f"No profile found in Supabase with id={user_id}")
 
     user = rows[0]
     if not user.get("phone_number"):
         raise ValueError(
-            f"User {user_id} exists but has no phone_number set in Supabase."
+            f"Profile {user_id} exists but has no phone_number set in Supabase."
         )
     return user
 
