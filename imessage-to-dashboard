@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""
+imessage-to-dashboard — iMessage → Supabase ingestion service.
+
+Usage:
+    imessage-to-dashboard live
+    imessage-to-dashboard backfill --user-id <uuid>
+"""
+import sys
+from pathlib import Path
+
+# Ensure the repo root is on the path so the package is importable
+# whether the script is run from the repo root or from another directory.
+sys.path.insert(0, str(Path(__file__).parent))
+
+from imessage_ingest.ingest import main
+
+if __name__ == "__main__":
+    main()

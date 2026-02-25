@@ -64,8 +64,8 @@ CREATE TABLE IF NOT EXISTS communications (
 
 ```bash
 git clone <this-repo>
-cd imessage-to-dashboard/imessage_ingest
-pip install -r requirements.txt
+cd imessage-to-dashboard
+pip install -r imessage_ingest/requirements.txt
 ```
 
 ### 2. Grant Full Disk Access
@@ -102,7 +102,7 @@ running the service.  Only those numbers will ever be ingested.
 
 ```bash
 cd imessage-to-dashboard
-python -m imessage_ingest.ingest live
+./imessage-to-dashboard live
 ```
 
 - Reads `state.json` for the last processed message ROWID.
@@ -113,7 +113,7 @@ python -m imessage_ingest.ingest live
 ### Backfill mode (historical sync for one client)
 
 ```bash
-python -m imessage_ingest.ingest backfill --user-id 550e8400-e29b-41d4-a716-446655440000
+./imessage-to-dashboard backfill --user-id 550e8400-e29b-41d4-a716-446655440000
 ```
 
 - Fetches **all** messages for the given user's phone number.
@@ -138,10 +138,8 @@ cat > ~/Library/LaunchAgents/com.company.imessage_ingest.plist << 'EOF'
 
     <key>ProgramArguments</key>
     <array>
-        <!-- Replace with the output of: which python3 -->
-        <string>/usr/local/bin/python3</string>
-        <string>-m</string>
-        <string>imessage_ingest.ingest</string>
+        <!-- Full path to the imessage-to-dashboard script -->
+        <string>/path/to/imessage-to-dashboard/imessage-to-dashboard</string>
         <string>live</string>
     </array>
 
@@ -204,12 +202,13 @@ tail -f /tmp/imessage_ingest.err
 ## Project Structure
 
 ```
+imessage-to-dashboard          ← executable entry point
 imessage_ingest/
-├── ingest.py       # CLI entry point (live / backfill commands)
-├── db.py           # Read-only SQLite access; copies chat.db before opening
-├── supabase.py     # PostgREST client (fetch users, insert communications)
-├── utils.py        # Phone normalization + Apple timestamp conversion
-├── state.json      # Persists last_seen_message_id between live runs
+├── ingest.py                  # CLI logic (live / backfill commands)
+├── db.py                      # Read-only SQLite access; copies chat.db before opening
+├── supabase.py                # PostgREST client (fetch users, insert communications)
+├── utils.py                   # Phone normalization + Apple timestamp conversion
+├── state.json                 # Persists last_seen_message_id between live runs
 ├── requirements.txt
 └── README.md
 ```

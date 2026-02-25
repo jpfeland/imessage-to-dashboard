@@ -3,8 +3,8 @@
 iMessage → Supabase ingestion service.
 
 Usage:
-    python ingest.py live
-    python ingest.py backfill --user-id <uuid>
+    imessage-to-dashboard live
+    imessage-to-dashboard backfill --user-id <uuid>
 """
 
 import argparse
@@ -200,8 +200,8 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  python ingest.py live\n"
-            "  python ingest.py backfill --user-id 550e8400-e29b-41d4-a716-446655440000\n"
+            "  imessage-to-dashboard live\n"
+            "  imessage-to-dashboard backfill --user-id 550e8400-e29b-41d4-a716-446655440000\n"
         ),
     )
     sub = parser.add_subparsers(dest="command", required=True)
