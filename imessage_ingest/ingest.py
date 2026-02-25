@@ -13,6 +13,8 @@ import logging
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from imessage_ingest import db, supabase
 from imessage_ingest.utils import apple_ts_to_iso, normalize_phone_key
 
@@ -195,6 +197,9 @@ def run_backfill(user_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    # Load .env from the repo root (two levels up from this file) if it exists.
+    load_dotenv(Path(__file__).parent.parent / ".env")
+
     parser = argparse.ArgumentParser(
         description="iMessage → Supabase ingestion service",
         formatter_class=argparse.RawDescriptionHelpFormatter,
